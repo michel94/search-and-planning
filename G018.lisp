@@ -95,17 +95,11 @@
 (defun operator (r)
 	(let (rs
 			(pecas-i (rect-pecas-i r))
-			(pecas-f (rect-pecas-f r))
-			(posicoes (rect-posicoes r))
-			(width (rect-width r))
-			(height (rect-height r))
-			tabuleiro-novo
-			posicoes-novo)
+			(posicoes (rect-posicoes r)))
 		(dolist (p pecas-i rs)
 			(dolist (pos posicoes)
 				(dolist (o '(H V))
 					(cond ((encaixa-peca-? r p pos o) (push (encaixa r p pos o) rs))))))
-		(print rs)
 		(values rs)))
 
 ;h-area: h = Area - areas encaixadas
@@ -126,3 +120,4 @@
 ;;; (load "G018.lisp")
 ;;; (load "PP-examples.lisp") --> capaz de dar warning visto que a estrutura piece esta redifinida	
 ;;; (time (procura (cria-problema (inicial (first p1a) (first (second p1a)) (second(second p1a))) (list #'operator) :objectivo? #'objectivo :estado= #'equal) "profundidade" :espaco-em-arvore? T))
+;;; (time (procura (cria-problema (inicial (first p1a) (first (second p1a)) (second(second p1a))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-area) "a*" :espaco-em-arvore? T))
