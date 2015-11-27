@@ -65,20 +65,10 @@
 
 
 (defun intersect (pos1 w1 h1 pos2 w2 h2)
-	(dolist (x (list(list (pos-h pos1) (pos-v pos1))
-				(list (+(pos-h pos1)w1) (pos-v pos1))
-				(list (+(pos-h pos1)w1) (+(pos-v pos1)h1))
-				(list (pos-h pos1) (+(pos-v pos1)h1))))
-			(if (and (and (< (pos-h pos2) (first x)) (< (first x) (+(pos-h pos2)w2)))
-				(and (< (pos-v pos2) (second x)) (< (second x) (+(pos-v pos2)h2))))
-						(return-from intersect T)))
-	(dolist (x (list(list (pos-h pos2) (pos-v pos2))
-				(list (+(pos-h pos2)w2) (pos-v pos2))
-				(list (+(pos-h pos2)w2) (+(pos-v pos2)h2))
-				(list (pos-h pos2) (+(pos-v pos2)h2))) nil)
-			(if (and (and (< (pos-h pos1) (first x)) (< (first x) (+(pos-h pos1)w1)))
-				(and (< (pos-v pos1) (second x)) (< (second x) (+(pos-v pos1)h1))))
-						(return-from intersect T))))
+	(not (or (>= (pos-h pos2) (+ (pos-h pos1) w1))
+			(>= (pos-h pos1) (+ (pos-h pos2) w2))
+			(>= (pos-v pos2) (+ (pos-v pos1) h1))
+			(>= (pos-v pos1) (+ (pos-v pos2) h2)))))
 					
 					
 ;encaixa - recebe o estado r, peca p, posicao pos e orientacao o
@@ -115,5 +105,24 @@
 			(dolist (pos posicoes)
 				(dolist (o '(H V))
 					(cond ((encaixa-peca-? r p pos o) (push (encaixa r p pos o) rs))))))
-		
+		(print rs)
 		(values rs)))
+
+;h-area: h = Area - areas encaixadas
+(defun h-area (r)
+	(let ((area 0))
+		(dolist (p (rect-pecas-f r))
+			(setf area (+ area (* (piece-width p) (piece-height p)))))
+	(- (* (rect-width r) (rect-height r)) area))) 
+
+;h-comp: h = Perimetro - maiores comprimentos
+(defun h-comp (r)
+	(let ((comp 0))
+		(dolist (p (rect-pecas-f r))
+			(setf comp (+ comp (max (piece-width p) (piece-height p)))))
+	(- (+ (* 2 (rect-width r)) (* 2 (rect-height r))) comp)))
+	
+;;; (load "procura.lisp")
+;;; (load "G018.lisp")
+;;; (load "PP-examples.lisp") --> capaz de dar warning visto que a estrutura piece esta redifinida	
+;;; (time (procura (cria-problema (inicial (first p1a) (first (second p1a)) (second(second p1a))) (list #'operator) :objectivo? #'objectivo :estado= #'equal) "profundidade" :espaco-em-arvore? T))
