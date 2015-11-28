@@ -36,11 +36,16 @@
 
 ;estado inicial
 (defun inicial (pecas w h)
+	(let ((area 0) (pos (list (make-pos 0 0))))
+		(dolist (p pecas)
+			(setf area (+ area (* (piece-width p) (piece-height p)))))
+		(if (> area (* w h)) (setf pos nil))
+
 	(make-rect :pecas-i pecas
 			:pecas-f (list)
-			:posicoes (list (make-pos 0 0))
+			:posicoes pos
 			:width w
-			:height h))
+			:height h)))
 
 ;objectivo - todos as pecas tiverem atribuidas			
 (defun objectivo (r)
@@ -58,8 +63,8 @@
 		(if (>  h (- (rect-height r) (pos-v pos))) (return-from encaixa-peca-? nil))
 		
 		(dolist (p2 (rect-pecas-f r) T)
-			(cond ((equal o 'H) (setf w2 (piece-width p2)) (setf h2 (piece-height p2)))
-			((equal o 'V) (setf w2 (piece-height p2)) (setf h2 (piece-width p2))))
+			(cond ((equal (piece-orientation p2) 'H) (setf w2 (piece-width p2)) (setf h2 (piece-height p2)))
+			((equal (piece-orientation p2) 'V) (setf w2 (piece-height p2)) (setf h2 (piece-width p2))))
 			(if (intersect pos w h (piece-position p2) w2 h2)
 				(return-from encaixa-peca-? nil)))))
 
@@ -86,11 +91,23 @@
 	(if (> (rect-height r) (+ (pos-v pos) h)) (setf newpos (agregate newpos (list (list (pos-h pos) (+ (pos-v pos) h))))))
 	(make-rect :pecas-i  (copy-except (rect-pecas-i r) p)
 		:pecas-f (append (rect-pecas-f r) (list newpiece))
-		:posicoes newpos
+		:posicoes (verify r newpos)
 		:width (rect-width r)
 		:height (rect-height r))))
 		
-
+(defun verify (r newpos)
+	(dolist (pos newpos newpos)
+		(dolist (p (rect-pecas-f r))
+			(if (inside pos p) (setf newpos (delete-first-eq-from-list pos newpos))))))
+			
+			
+(defun inside (pos p)
+	(let (w h (pos2 (piece-position p)))
+	(cond ((equal (piece-orientation p) 'H) (setf w (piece-width p)) (setf h (piece-height p)))
+		  ((equal (piece-orientation p) 'V) (setf w (piece-height p)) (setf h (piece-width p))))
+	(and (<= (pos-h pos2) (pos-h pos)) (< (pos-h pos) (+ (pos-h pos2) w))
+		(<= (pos-v pos2) (pos-v pos)) (< (pos-v pos) (+ (pos-v pos2) h)))))
+			
 ;operator - recebe o estado r e retorna todos os estados possiveis derivados deste				
 (defun operator (r)
 	(let (rs
@@ -109,15 +126,32 @@
 			(setf area (+ area (* (piece-width p) (piece-height p)))))
 	(- (* (rect-width r) (rect-height r)) area))) 
 
-;h-comp: h = Perimetro - maiores comprimentos
+;h-comp: h = Area - maiores comprimentos
 (defun h-comp (r)
 	(let ((comp 0))
 		(dolist (p (rect-pecas-f r))
 			(setf comp (+ comp (max (piece-width p) (piece-height p)))))
-	(- (+ (* 2 (rect-width r)) (* 2 (rect-height r))) comp)))
+	(print (- (* 2 (* (rect-width r) (rect-height r))) comp))
+	(print r)
+	(- (* (rect-width r) (rect-height r)) comp)))
+	
+(defun h-pos (r)
+	(let ((p 0))
+		(dolist (pos (rect-posicoes r))
+			(setf p (1+ p)))
+		(- (* (rect-width r) (rect-height r)) p)))
+	
+(defun h-pos2 (r)
+	(let ((p 0))
+		(dolist (pos (rect-posicoes r))
+			(setf p (+ p (first pos) (second pos))))
+		(- (* (rect-width r) (rect-height r)) p)))
+			
+
 	
 ;;; (load "procura.lisp")
 ;;; (load "G018.lisp")
 ;;; (load "PP-examples.lisp") --> capaz de dar warning visto que a estrutura piece esta redifinida	
 ;;; (time (procura (cria-problema (inicial (first p1a) (first (second p1a)) (second(second p1a))) (list #'operator) :objectivo? #'objectivo :estado= #'equal) "profundidade" :espaco-em-arvore? T))
-;;; (time (procura (cria-problema (inicial (first p1a) (first (second p1a)) (second(second p1a))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-area) "a*" :espaco-em-arvore? T))
+;;; (time (procura (cria-problema (inicial (first p1b) (first (second p1b)) (second(second p1b))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-comp) "a*" :espaco-em-arvore? T))
+;;; (time (procura (cria-problema (inicial (first p1b) (first (second p1b)) (second(second p1b))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-area) "a*" :espaco-em-arvore? T))
