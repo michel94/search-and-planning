@@ -131,10 +131,13 @@
 	(let ((comp 0))
 		(dolist (p (rect-pecas-f r))
 			(setf comp (+ comp (max (piece-width p) (piece-height p)))))
-	(print (- (* 2 (* (rect-width r) (rect-height r))) comp))
-	(print r)
 	(- (* (rect-width r) (rect-height r)) comp)))
-	
+
+(defun h-comp2 (r)
+	(let ((comp 0))
+		(dolist (p (rect-pecas-f r))
+			(setf comp (+ comp (piece-width p) (piece-height p))))
+	(- (* (rect-width r) (rect-height r)) comp)))
 (defun h-pos (r)
 	(let ((p 0))
 		(dolist (pos (rect-posicoes r))
@@ -147,11 +150,19 @@
 			(setf p (+ p (first pos) (second pos))))
 		(- (* (rect-width r) (rect-height r)) p)))
 			
-
+(defun complicated(r)
+	(let ((a 0))
+		(dolist (pos (rect-posicoes r))
+			(dolist (p (rect-pecas-i r))
+				(if (or (<(- (rect-width r) (pos-h pos)) (min (piece-width p)(piece-height p)))
+						(<(- (rect-height r) (pos-v pos)) (min (piece-width p)(piece-height p))))
+						(return-from complicated most-positive-fixnum)
+						(setf a (1+ a)))))
+		a))
 	
 ;;; (load "procura.lisp")
 ;;; (load "G018.lisp")
 ;;; (load "PP-examples.lisp") --> capaz de dar warning visto que a estrutura piece esta redifinida	
 ;;; (time (procura (cria-problema (inicial (first p1a) (first (second p1a)) (second(second p1a))) (list #'operator) :objectivo? #'objectivo :estado= #'equal) "profundidade" :espaco-em-arvore? T))
-;;; (time (procura (cria-problema (inicial (first p1b) (first (second p1b)) (second(second p1b))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-comp) "a*" :espaco-em-arvore? T))
 ;;; (time (procura (cria-problema (inicial (first p1b) (first (second p1b)) (second(second p1b))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-area) "a*" :espaco-em-arvore? T))
+;;; (time (procura (cria-problema (inicial (first p3b) (first (second p3b)) (second(second p3b))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'complicated) "a*" :espaco-em-arvore? T))
