@@ -2,6 +2,10 @@
 
 (in-package :user)
 
+(compile-file "procura.lisp")
+(load "procura")
+(load "PP-examples.lisp") ;--> capaz de dar warning visto que a estrutura piece esta redifinida	
+
 ;;;;;;;;;;;;;;;;;;;PROVIDED;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defstruct piece
@@ -9,23 +13,46 @@
  height
  position
  orientation) 
- 
+
+(defun piece-h (p)
+	(if (equal (piece-orientation p) 'V)
+		(piece-height p)
+		(piece-width p)
+	)
+)
+(defun piece-w (p)
+	(if (equal (piece-orientation p) 'V)
+		(piece-width p)
+		(piece-height p)
+	)
+)
+(defun piece-y (p)
+	(first (piece-position p))
+)
+(defun piece-x (p)
+	(second (piece-position p))
+)
+
 (defun make-pos (h v) ;; h-horizontal v-vertical
- (list h v))
+	(list h v))
 (defun pos-h (pos)
- (first pos))
+	(first pos))
 (defun pos-v (pos)
- (second pos))
+	(second pos))
 (defun pos=? (p1 p2)
- (equal p1 p2)) 
+	(equal p1 p2)) 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;LIST;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
- 
+
+(defun range (max &key (min 0) (step 1))
+   (loop for n from min below max by step
+      collect n))
+
 (defun copy-except (l p)
     (let ((newl (copy-list l)))
 	(setf newl (delete-first-eq-from-list p newl))))
-	
 
-	
+
+
 (defun agregate (l1 l2)
 	(cond ((null l1) l2)
 		  (T (cons (first l1) (agregate (rest l1) l2)))))
@@ -36,7 +63,7 @@
 
 ;estado inicial
 (defun inicial (pecas w h)
-	(let ((area 0) (pos (list (make-pos 0 0))))
+	(let ((area 0) (pos (list (make-pos 0 0))) )
 		(dolist (p pecas)
 			(setf area (+ area (* (piece-width p) (piece-height p)))))
 		(if (> area (* w h)) (setf pos nil))
@@ -99,8 +126,8 @@
 	(dolist (pos newpos newpos)
 		(dolist (p (rect-pecas-f r))
 			(if (inside pos p) (setf newpos (delete-first-eq-from-list pos newpos))))))
-			
-			
+
+
 (defun inside (pos p)
 	(let (w h (pos2 (piece-position p)))
 	(cond ((equal (piece-orientation p) 'H) (setf w (piece-width p)) (setf h (piece-height p)))
@@ -118,6 +145,29 @@
 				(dolist (o '(H V))
 					(cond ((encaixa-peca-? r p pos o) (push (encaixa r p pos o) rs))))))
 		(values rs)))
+
+(defun printState(s)
+	(let ((m 
+			(make-array (list (rect-height s) (rect-width s) ) :initial-element 0)
+		) p px py )
+		(loop for i in (range (length (rect-pecas-f s) ) ) do
+			(print (nth i (rect-pecas-f s) ) )
+			(setf p (nth i (rect-pecas-f s)))
+
+			(loop for y in (range (piece-h p)) do
+				(loop for x in (range (piece-w p)) do
+					(setf px (+ x (piece-x p) ) )
+					(setf py (+ y (piece-y p) ) )
+					(print (list py px) )
+					(setf (aref m py px) (1+ i) )
+				)
+			)
+		)
+		s
+		
+	)
+		
+)
 
 ;h-area: h = Area - areas encaixadas
 (defun h-area (r)
@@ -159,10 +209,11 @@
 						(return-from complicated most-positive-fixnum)
 						(setf a (1+ a)))))
 		a))
-	
-;;; (load "procura.lisp")
+
 ;;; (load "G018.lisp")
-;;; (load "PP-examples.lisp") --> capaz de dar warning visto que a estrutura piece esta redifinida	
-;;; (time (procura (cria-problema (inicial (first p1a) (first (second p1a)) (second(second p1a))) (list #'operator) :objectivo? #'objectivo :estado= #'equal) "profundidade" :espaco-em-arvore? T))
+(time (setf s (procura (cria-problema (inicial (first p1c) (first (second p1c)) (second(second p1c)) ) (list #'operator) :objectivo? #'objectivo :estado= #'equal) "profundidade" :espaco-em-arvore? T)))
+(printState (car (last (first s))) )
 ;;; (time (procura (cria-problema (inicial (first p1b) (first (second p1b)) (second(second p1b))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-area) "a*" :espaco-em-arvore? T))
 ;;; (time (procura (cria-problema (inicial (first p3b) (first (second p3b)) (second(second p3b))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'complicated) "a*" :espaco-em-arvore? T))
+
+
