@@ -148,22 +148,20 @@
 
 (defun printState(s)
 	(let ((m 
-			(make-array (list (rect-height s) (rect-width s) ) :initial-element 0)
+			(make-array (list (rect-width s) (rect-height s) ) :initial-element 0)
 		) p px py )
 		(loop for i in (range (length (rect-pecas-f s) ) ) do
-			(print (nth i (rect-pecas-f s) ) )
 			(setf p (nth i (rect-pecas-f s)))
 
 			(loop for y in (range (piece-h p)) do
 				(loop for x in (range (piece-w p)) do
 					(setf px (+ x (piece-x p) ) )
 					(setf py (+ y (piece-y p) ) )
-					(print (list py px) )
 					(setf (aref m py px) (1+ i) )
 				)
 			)
 		)
-		s
+		(print m)
 		
 	)
 		
@@ -213,6 +211,7 @@
 ;;; (load "G018.lisp")
 (time (setf s (procura (cria-problema (inicial (first p1c) (first (second p1c)) (second(second p1c)) ) (list #'operator) :objectivo? #'objectivo :estado= #'equal) "profundidade" :espaco-em-arvore? T)))
 (printState (car (last (first s))) )
+
 ;;; (time (procura (cria-problema (inicial (first p1b) (first (second p1b)) (second(second p1b))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-area) "a*" :espaco-em-arvore? T))
 ;;; (time (procura (cria-problema (inicial (first p3b) (first (second p3b)) (second(second p3b))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'complicated) "a*" :espaco-em-arvore? T))
 
