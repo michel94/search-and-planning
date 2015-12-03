@@ -789,8 +789,8 @@ Estrategia A*."
   (let ((estado= (problema-estado= problema))
 	(objectivo? (problema-objectivo? problema)))
 
-    (labels ((esta-no-caminho? (estado caminho)
-	       (member estado caminho :test estado=))
+    (labels (
+      (esta-no-caminho? (estado caminho) (member estado caminho :test estado=))
 	     
 	     (procura-prof (estado caminho prof-actual)
 	       (block procura-prof
