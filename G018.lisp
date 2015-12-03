@@ -147,6 +147,11 @@
 		(values rs)))
 
 (defun printState(s)
+	(when (null s)
+		(print NIL)
+		(return-from printState NIL)
+	)
+
 	(let ((m 
 			(make-array (list (rect-width s) (rect-height s) ) :initial-element 0)
 		) p px py )
@@ -213,6 +218,18 @@
 	(< (funcall h a) (funcall h b) )
 )
 
+(defun ILDS (state h)
+	(let ( (size (length (rect-pecas-i state) ) ) sol)
+		(loop for disc in (range (1+ size) ) do
+			(print disc)
+			(setf sol (LDS state h disc))
+			(if sol
+				(return-from ILDS sol))
+		)
+	)
+	NIL
+)
+
 (defun LDS (state h rem-disc)
 	(let ((succ (operator state)) f sol)
 		(if (objectivo state)
@@ -222,8 +239,8 @@
 			(return-from LDS NIL)
 		)
 
-		(defun f (a b) (comp-state h a b) )
-		(sort succ #'f)
+		
+		(sort succ (lambda (a b) (comp-state h a b) ) )
 
 		(setf sol (LDS (first succ) h rem-disc))
 		(if sol
@@ -233,7 +250,7 @@
 				(setf sol (LDS child h (1- rem-disc)))
 				(if sol
 					(return-from LDS sol))
-				(print (h-comp child))
+				;(print (h-comp child))
 			)
 		)
 
@@ -251,13 +268,13 @@ test1 '((#S(PIECE :WIDTH 3 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL)
        (10 4))
 )
 ;;; (load "G018.lisp")
-;(time (setf s (procura (cria-problema (inicial (first p1b) (first (second p1b)) (second(second p1b)) ) (list #'operator) :objectivo? #'objectivo :estado= #'equal) "profundidade" :espaco-em-arvore? T)))
-(time (setf s (procura (cria-problema (inicial (first test1) (first (second test1)) (second(second test1)) ) (list #'operator) :objectivo? #'objectivo :estado= #'equal) "profundidade" :espaco-em-arvore? T)))
+;(time (setf s (procura (cria-problema (inicial (first p1a) (first (second p1a)) (second(second p1a)) ) (list #'operator) :objectivo? #'objectivo :estado= #'equal) "profundidade" :espaco-em-arvore? T)))
+;(time (setf s (procura (cria-problema (inicial (first test1) (first (second test1)) (second(second test1)) ) (list #'operator) :objectivo? #'objectivo :estado= #'equal) "profundidade" :espaco-em-arvore? T)))
 ;(printState (car (last (first s))) )
 
-(setf ini (inicial (first test1) (first (second test1)) (second(second test1)) ))
+(setf ini (inicial (first p4c) (first (second p4c)) (second(second p4c)) ))
 
-(printState (LDS ini #'h-area 1))
+(printState (ILDS ini #'h-area))
 
 ;;; (time (procura (cria-problema (inicial (first p1b) (first (second p1b)) (second(second p1b))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-area) "a*" :espaco-em-arvore? T))
 ;;; (time (procura (cria-problema (inicial (first p3b) (first (second p3b)) (second(second p3b))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'complicated) "a*" :espaco-em-arvore? T))
