@@ -146,6 +146,18 @@
 					(cond ((encaixa-peca-? r p pos o) (push (encaixa r p pos o) rs))))))
 		(values rs)))
 
+
+(defun operatorOpt (r)
+	(let (rs
+			(pecas-i (rect-pecas-i r))
+			(posicoes (rect-posicoes r)))
+		(dolist (p pecas-i rs)
+			(dolist (pos posicoes)
+				(dolist (o '(H V))
+					(cond ((encaixa-peca-? r p pos o) (push (encaixa r p pos o) rs))))))
+		(values rs)))
+
+
 (defun printState(s)
 	(when (null s)
 		(print NIL)
@@ -153,7 +165,7 @@
 	)
 
 	(let ((m 
-			(make-array (list (rect-width s) (rect-height s) ) :initial-element 0)
+			(make-array (list (rect-width s) (if (> (rect-height s) 1000) 30 (rect-height s)) ) :initial-element 0)
 		) p px py )
 		(loop for i in (range (length (rect-pecas-f s) ) ) do
 			(setf p (nth i (rect-pecas-f s)))
@@ -202,7 +214,7 @@
 		(dolist (pos (rect-posicoes r))
 			(setf p (+ p (first pos) (second pos))))
 		(- (* (rect-width r) (rect-height r)) p)))
-			
+
 (defun complicated(r)
 	(let ((a 0))
 		(dolist (pos (rect-posicoes r))
@@ -214,17 +226,28 @@
 		a))
 
 
+; Height heuristic, for optimization problem
+(defun h-height(state)
+	(let ((m 0) h)
+		(loop for p in (rect-pecas-f state) do
+			(setf h (+ (piece-x p) (piece-w p) ))
+			(if (> h m) 
+				(setf m h)
+			)
+		)
+		m
+	)
+)
+
 (defun comp-state(h a b)
 	(< (funcall h a) (funcall h b) )
 )
 
 
-
-(defun ILDS (state h)
+(defun ILDS (state op h)
 	(let ( (size (length (rect-pecas-i state) ) ) sol)
 		(loop for disc in (range (1+ size) ) do
-			(print disc)
-			(setf sol (LDS state h disc))
+			(setf sol (LDS state op h disc))
 			(if sol
 				(return-from ILDS sol))
 		)
@@ -232,8 +255,11 @@
 	NIL
 )
 
-(defun LDS (state h rem-disc)
-	(let ((succ (operator state)) f sol)
+(defun LDS (state op h rem-disc)
+	(let ((succ (funcall op state)) 
+		  (rem (length (rect-pecas-i state)) ) 
+		   sol )
+
 		(if (objectivo state)
 			(return-from LDS state)
 		)
@@ -244,12 +270,15 @@
 		
 		(sort succ (lambda (a b) (comp-state h a b) ) )
 
-		(setf sol (LDS (first succ) h rem-disc))
-		(if sol
-			(return-from LDS sol))
+		(when (> rem rem-disc)
+			(setf sol (LDS (first succ) op h rem-disc))
+			(if sol
+				(return-from LDS sol))
+		)
+
 		(if (> rem-disc 0)
 			(loop for child in (cdr succ) do
-				(setf sol (LDS child h (1- rem-disc)))
+				(setf sol (LDS child op h (1- rem-disc)))
 				(if sol
 					(return-from LDS sol))
 			)
@@ -258,26 +287,45 @@
 	)
 )
 
-(defun samp (state )
-	(let ((succ (operator state)) f sol)
+(defun samp (state op)
+	(let ((succ (funcall op state)) )
 		(if (objectivo state)
 			(return-from samp state)
 		)
-		(if (null succ) 
+		(if (null succ)
 			(return-from samp NIL)
 		)
 
-		(return-from samp (samp (nth (random (length succ)) succ)))
+		(return-from samp (samp (nth (random (length succ)) succ) op ))
 
 	)
 )
 
-(defun iterative-sampling(state )
+(defun i-sampling-sat(state op)
 	(let (sol)
 		(loop do
-			(setf sol (samp state))
+			(setf sol (samp state op))
+
 			(if sol
-				(return-from iterative-sampling sol))
+				(return-from i-sampling-sat sol))
+
+		while T)
+	)
+)
+
+(defun i-sampling-opt(state op)
+	(let (sol best)
+		(loop do
+			(setf sol (samp state op))
+			(if (null best)
+				(setf best sol)
+				(if (> (h-height best) (h-height sol) )
+					(setf best sol)
+				)
+			)
+			(print (h-height best) )
+			(printState best)
+			
 		while T)
 	)
 )
@@ -296,10 +344,12 @@ test1 '((#S(PIECE :WIDTH 3 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL)
 ;(time (setf s (procura (cria-problema (inicial (first test1) (first (second test1)) (second(second test1)) ) (list #'operator) :objectivo? #'objectivo :estado= #'equal) "profundidade" :espaco-em-arvore? T)))
 ;(printState (car (last (first s))) )
 
-(setf ini (inicial (first p2c) (first (second p2c)) (second(second p2c)) ))
+;(setf ini (inicial (first p4b) (first (second p4b)) (second(second p4b)) ))
+;(printState (ILDS ini #'operator #'complicated))
 
-(printState (ILDS ini #'h-area))
-(printState (iterative-sampling ini))
+(setf ini (inicial (first p4b) (first (second p4b)) most-positive-fixnum ))
+(printState (i-sampling-opt ini #'operator))
+
 
 ;;; (time (procura (cria-problema (inicial (first p1b) (first (second p1b)) (second(second p1b))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-area) "a*" :espaco-em-arvore? T))
 ;;; (time (procura (cria-problema (inicial (first p3b) (first (second p3b)) (second(second p3b))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'complicated) "a*" :espaco-em-arvore? T))
