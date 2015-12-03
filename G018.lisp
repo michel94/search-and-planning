@@ -218,6 +218,8 @@
 	(< (funcall h a) (funcall h b) )
 )
 
+
+
 (defun ILDS (state h)
 	(let ( (size (length (rect-pecas-i state) ) ) sol)
 		(loop for disc in (range (1+ size) ) do
@@ -250,13 +252,35 @@
 				(setf sol (LDS child h (1- rem-disc)))
 				(if sol
 					(return-from LDS sol))
-				;(print (h-comp child))
 			)
 		)
 
 	)
 )
 
+(defun samp (state )
+	(let ((succ (operator state)) f sol)
+		(if (objectivo state)
+			(return-from samp state)
+		)
+		(if (null succ) 
+			(return-from samp NIL)
+		)
+
+		(return-from samp (samp (nth (random (length succ)) succ)))
+
+	)
+)
+
+(defun iterative-sampling(state )
+	(let (sol)
+		(loop do
+			(setf sol (samp state))
+			(if sol
+				(return-from iterative-sampling sol))
+		while T)
+	)
+)
 
 (setf 
 
@@ -272,9 +296,10 @@ test1 '((#S(PIECE :WIDTH 3 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL)
 ;(time (setf s (procura (cria-problema (inicial (first test1) (first (second test1)) (second(second test1)) ) (list #'operator) :objectivo? #'objectivo :estado= #'equal) "profundidade" :espaco-em-arvore? T)))
 ;(printState (car (last (first s))) )
 
-(setf ini (inicial (first p4c) (first (second p4c)) (second(second p4c)) ))
+(setf ini (inicial (first p2c) (first (second p2c)) (second(second p2c)) ))
 
 (printState (ILDS ini #'h-area))
+(printState (iterative-sampling ini))
 
 ;;; (time (procura (cria-problema (inicial (first p1b) (first (second p1b)) (second(second p1b))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-area) "a*" :espaco-em-arvore? T))
 ;;; (time (procura (cria-problema (inicial (first p3b) (first (second p3b)) (second(second p3b))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'complicated) "a*" :espaco-em-arvore? T))
