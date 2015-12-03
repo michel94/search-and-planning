@@ -208,9 +208,56 @@
 						(setf a (1+ a)))))
 		a))
 
+
+(defun comp-state(h a b)
+	(< (funcall h a) (funcall h b) )
+)
+
+(defun LDS (state h rem-disc)
+	(let ((succ (operator state)) f sol)
+		(if (objectivo state)
+			(return-from LDS state)
+		)
+		(if (null succ) 
+			(return-from LDS NIL)
+		)
+
+		(defun f (a b) (comp-state h a b) )
+		(sort succ #'f)
+
+		(setf sol (LDS (first succ) h rem-disc))
+		(if sol
+			(return-from LDS sol))
+		(if (> rem-disc 0)
+			(loop for child in (cdr succ) do
+				(setf sol (LDS child h (1- rem-disc)))
+				(if sol
+					(return-from LDS sol))
+				(print (h-comp child))
+			)
+		)
+
+	)
+)
+
+
+(setf 
+
+ ;; Satisfaction: does not have a solution.
+test1 '((#S(PIECE :WIDTH 3 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL) 
+	  #S(PIECE :WIDTH 2 :HEIGHT 3 :POSITION NIL :ORIENTATION NIL) 
+	  #S(PIECE :WIDTH 1 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL) 
+	  #S(PIECE :WIDTH 1 :HEIGHT 3 :POSITION NIL :ORIENTATION NIL))
+       (10 4))
+)
 ;;; (load "G018.lisp")
-(time (setf s (procura (cria-problema (inicial (first p1c) (first (second p1c)) (second(second p1c)) ) (list #'operator) :objectivo? #'objectivo :estado= #'equal) "profundidade" :espaco-em-arvore? T)))
-(printState (car (last (first s))) )
+;(time (setf s (procura (cria-problema (inicial (first p1b) (first (second p1b)) (second(second p1b)) ) (list #'operator) :objectivo? #'objectivo :estado= #'equal) "profundidade" :espaco-em-arvore? T)))
+(time (setf s (procura (cria-problema (inicial (first test1) (first (second test1)) (second(second test1)) ) (list #'operator) :objectivo? #'objectivo :estado= #'equal) "profundidade" :espaco-em-arvore? T)))
+;(printState (car (last (first s))) )
+
+(setf ini (inicial (first test1) (first (second test1)) (second(second test1)) ))
+
+(printState (LDS ini #'h-area 1))
 
 ;;; (time (procura (cria-problema (inicial (first p1b) (first (second p1b)) (second(second p1b))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-area) "a*" :espaco-em-arvore? T))
 ;;; (time (procura (cria-problema (inicial (first p3b) (first (second p3b)) (second(second p3b))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'complicated) "a*" :espaco-em-arvore? T))
