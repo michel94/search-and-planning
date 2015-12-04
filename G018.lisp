@@ -168,12 +168,7 @@
 		(values rs)))
 
 
-(defun printState(s)
-	(when (null s)
-		(print NIL)
-		(return-from printState NIL)
-	)
-
+(defun create-matrix(s)
 	(let ((m 
 			(make-array (list (rect-width s) (if (> (rect-height s) 1000) 30 (rect-height s)) ) :initial-element 0)
 		) p px py )
@@ -188,9 +183,16 @@
 				)
 			)
 		)
-		(print m)
-		
+		m
 	)
+)
+
+(defun printState(s)
+	(when (null s)
+		(print NIL)
+		(return-from printState NIL)
+	)
+	(print (create-matrix s))
 	
 )
 
@@ -285,6 +287,38 @@
 	)
 )
 
+(defun floodfill(m x y)
+	(if (or (>= x (array-dimension m 1)) (>= y (array-dimension m 0)) (< y 0) (< x 0) )
+		(return-from floodfill)
+	)
+	(when (= (aref m y x) 0)
+		(setf (aref m y x) 1)
+		(floodfill m (1+ x) y)
+		(floodfill m (1- x) y)
+		(floodfill m x (1+ y))
+		(floodfill m x (1- y))
+	)
+)
+
+;(m (create-matrix state))
+(defun h-hole(state)
+	(let ( (m (create-matrix state)) (count 0)) 
+		(loop for x in (range (array-dimension m 1) ) do
+			(floodfill m (1- (array-dimension m 0)) x )
+		)
+		(loop for y in (range (array-dimension m 0)) do
+			(loop for x in (range (array-dimension m 1)) do
+				(if (= (aref m y x) 0)
+					(incf count))
+			)
+		)
+
+		(+ (- 0 count) (* 50 (h-height state) ) )
+	)
+)
+
+
+
 (defun comp-state(h a b)
 	(< (funcall h a) (funcall h b) )
 )
@@ -349,7 +383,7 @@
 	(let ( (size (length (rect-pecas-i state) ) ) (start (get-universal-time)) best )
 		(loop for disc in (range (1+ size) ) do
 			(setf best (LDS-opt state op h disc best start))
-			(if (> (get-elapsed start) 300)
+			(if (> (get-elapsed start) 30)
 				(return-from ILDS-opt best)
 			)
 		)
@@ -444,7 +478,7 @@
 			(printState best)
 			
 
-		while (< (get-elapsed start) 300) )
+		while (< (get-elapsed start) 30) )
 
 		best
 	)
@@ -480,17 +514,20 @@ test1 '((#S(PIECE :WIDTH 3 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL)
 
 (defun place-pieces (r p)
 	(let ((s))
-	(cond ((equal p "best.approach.satisfaction") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'complicated2) "a*" :espaco-em-arvore? T))))))
+	(cond ((equal p "best.approach.satisfaction") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-hole) "a*" :espaco-em-arvore? T))))))
 		  ((equal p "a*.best.heuristic") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'best-heuristic) "a*" :espaco-em-arvore? T))))))
 		  ((equal p "a*.best.alternative.heuristic") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-comp) "a*" :espaco-em-arvore? T))))))
 		  ((equal p "iterative.sampling.satisfaction") (setf s (i-sampling-sat (inicial (first r) (first (second r)) (second(second r)) T) #'operators)))
 		  ((equal p "ILDS") (setf s (ILDS (inicial (first r) (first (second r)) (second(second r)) T) #'operator #'complicated2)))
-		  ((equal p "best.approach.optimization") (setf s (ILDS-opt (inicial (first r) (first (second r)) most-positive-fixnum) #'operator #'h-height)))
+		  ((equal p "best.approach.optimization") (setf s (ILDS-opt (inicial (first r) (first (second r)) most-positive-fixnum) #'operator #'h-hole)))
 		  ((equal p "iterative.sampling.optimization") (setf s (i-sampling-opt (inicial (first r) (first (second r)) most-positive-fixnum) #'operator)))
 		  ((equal p "alternative.approach.optimization") (setf s (ILDS-opt (inicial (first r) (first (second r)) most-positive-fixnum) #'operator #'h-height))))
 	(print s)
 	(when s (print (h-height s)) (printState s))
-	(if (null s) nil (rect-pecas-f s))))
+	(if (null s) nil (rect-pecas-f s))
+	(print (h-hole s) )
+
+))
 
 
 
@@ -498,7 +535,7 @@ test1 '((#S(PIECE :WIDTH 3 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL)
 
 
 ;(time (place-pieces p10a "a*.best.heuristic"))
-;(time (place-pieces p40a "alternative.approach.optimization"))
+;(time (place-pieces p50a "alternative.approach.optimization"))
 (time (place-pieces p40a "best.approach.satisfaction"))
 ;(time (place-pieces p10c "a*.best.heuristic"))
 
