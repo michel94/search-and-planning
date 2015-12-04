@@ -266,8 +266,16 @@
 						(setf a (1+ a)))))
 		(+ (h-comp r) a)))
 
+
 (defun complicated3(r)
 	(+ (h-comp r) (* 0.1 (complicated r))))
+
+(defun best-heuristic(r)
+	(if (all-pieces-playable r)
+		(h-comp r)
+		most-positive-fixnum)
+)
+
 
 ; Height heuristic, for optimization problem
 (defun h-height(state)
@@ -369,6 +377,9 @@
 		)
 
 		(when best
+			(if (< (h-height best) (h-height state) )
+				(return-from LDS-opt best))
+
 			(setf (rect-height state) (h-height best))
 			(when (null (all-pieces-playable state))
 				(setf (rect-height state) most-positive-fixnum)
@@ -465,7 +476,9 @@ test1 '((#S(PIECE :WIDTH 3 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL)
 ;(time (printState (i-sampling-opt ini #'operator)))
 
 
+
 (setf ini (inicial (first p10b) (first (second p10b)) most-positive-fixnum ))
+
 ;(time (printState (ILDS-opt ini #'operator #'h-height)))
 
 ;;; (time (procura (cria-problema (inicial (first p4b) (first (second p4b)) (second(second p4b))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'complicated) "a*" :espaco-em-arvore? T))
@@ -488,6 +501,7 @@ test1 '((#S(PIECE :WIDTH 3 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL)
 		  ((equal p "ida*.best.heuristic") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'complicated2) "ida*" :espaco-em-arvore? T))))))
 		  ((equal p "ida*.best.alternative.heuristic") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-comp) "ida*" :espaco-em-arvore? T)))))))
 	(print s) 
+
 	(when s (print (h-height s)) (printState s))
 	(if (null s) nil (rect-pecas-f s))))
 
@@ -496,6 +510,10 @@ test1 '((#S(PIECE :WIDTH 3 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL)
 
 
 
-(time (place-pieces p4c "a*.best.heuristic"))
+
+;(time (place-pieces p10a "a*.best.heuristic"))
+;(time (place-pieces p40a "alternative.approach.optimization"))
+(time (place-pieces p40a "best.approach.satisfaction"))
+;(time (place-pieces p10c "a*.best.heuristic"))
 
 
