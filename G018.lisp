@@ -550,11 +550,11 @@ test1 '((#S(PIECE :WIDTH 3 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL)
 
 ))
 
-(time (place-pieces p1c "profundidade"))
-(time (place-pieces p20c "profundidade"))
-(time (place-pieces p4c "profundidade"))
-(time (place-pieces p40a "profundidade"))
-(time (place-pieces p50a "profundidade"))
+(time (place-pieces p35 "profundidade"))
+(time (place-pieces p35 "a*.best.heuristic"))
+(time (place-pieces p35 "a*.best.alternative.heuristic"))
+(time (place-pieces p35 "ILDS"))
+(time (place-pieces p35 "iterative.sampling.satisfaction"))
 
 
 ;(time (place-pieces p4c "a*.best.alternative.heuristic"))
