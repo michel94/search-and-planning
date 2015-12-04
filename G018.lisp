@@ -328,7 +328,10 @@
 )
 
 (defun nbest(current new)
-	(if (null current) (return-from nbest new) )
+	(when (null current) 
+		(print (h-height new))
+		(printState new)
+		(return-from nbest new) )
 	(if (null new) (return-from nbest new) )
 
 	(if (< (h-height new) (h-height current) )
@@ -457,7 +460,8 @@ test1 '((#S(PIECE :WIDTH 3 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL)
 ;(setf ini (inicial (first p4b) (first (second p4b)) most-positive-fixnum ))
 ;(time (printState (i-sampling-opt ini #'operator)))
 
-(setf ini (inicial (first p4a) (first (second p4a)) most-positive-fixnum ))
+
+(setf ini (inicial (first p10b) (first (second p10b)) most-positive-fixnum ))
 (time (printState (ILDS-opt ini #'operator #'h-height)))
 
 ;;; (time (procura (cria-problema (inicial (first p4b) (first (second p4b)) (second(second p4b))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'complicated) "a*" :espaco-em-arvore? T))
@@ -474,6 +478,7 @@ test1 '((#S(PIECE :WIDTH 3 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL)
 		  ((equal p "best.approach.optimization") T)
 		  ((equal p "iterative.sampling.optimization") T)
 		  ((equal p "alternative.approach.optimization") T))
+	(when s (print (h-height s)) (printState s))
 	(if (null s) nil (rect-pecas-f s))))
 
 
@@ -481,5 +486,6 @@ test1 '((#S(PIECE :WIDTH 3 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL)
 
 
 
+(time (place-pieces p10a "a*.best.heuristic"))
 
 
