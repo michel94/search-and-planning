@@ -347,7 +347,7 @@
 			(print (h-height best) )
 			(printState best)
 			
-		while (< (get-elapsed start) 15) )
+		while (< (get-elapsed start) 300) )
 		best
 	)
 )
@@ -385,10 +385,10 @@ test1 '((#S(PIECE :WIDTH 3 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL)
 	(cond ((equal p "best.approach.satisfaction") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'complicated2) "a*" :espaco-em-arvore? T))))))
 		  ((equal p "a*.best.heuristic") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'complicated2) "a*" :espaco-em-arvore? T))))))
 		  ((equal p "a*.best.alternative.heuristic") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-comp) "a*" :espaco-em-arvore? T))))))
-		  ((equal p "iterative.sampling.satisfaction") (setf s (iterative-sampling (inicial (first r) (first (second r)) (second(second r)) T))))
+		  ((equal p "iterative.sampling.satisfaction") (setf s (i-sampling-sat (inicial (first r) (first (second r)) (second(second r)) T) #'operators)))
 		  ((equal p "ILDS") (setf s (ILDS (inicial (first r) (first (second r)) (second(second r)) T) #'operator #'complicated2)))
 		  ((equal p "best.approach.optimization") T)
-		  ((equal p "iterative.sampling.optimization") T)
+		  ((equal p "iterative.sampling.optimization") (setf s (i-sampling-opt (inicial (first r) (first (second r)) most-positive-fixnum) #'operator)))
 		  ((equal p "alternative.approach.optimization") T))
 	(if (null s) nil (rect-pecas-f s))))
 
