@@ -300,7 +300,13 @@
 	(/ (h-comp state) (* 50 (h-height state) ))
 )
 
-
+(defun h-comp-height(state)
+	(+  (h-comp state) 
+		(* 
+			(+ (length (rect-pecas-i state)) (length (rect-pecas-i state))) 
+			(h-height state))
+	)
+)
 
 (defun comp-state(h a b)
 	(< (funcall h a) (funcall h b) )
@@ -510,7 +516,7 @@ test1 '((#S(PIECE :WIDTH 3 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL)
 		  
 		  ((equal p "best.approach.optimization") (setf s (ILDS-opt (inicial (first r) (first (second r)) most-positive-fixnum) #'operator #'h-hole-height)))
 		  ((equal p "iterative.sampling.optimization") (setf s (i-sampling-opt (inicial (first r) (first (second r)) most-positive-fixnum) #'operator)))
-		  ((equal p "alternative.approach.optimization") (setf s (ILDS-opt (inicial (first r) (first (second r)) most-positive-fixnum) #'operator #'h-hole-height)))
+		  ((equal p "alternative.approach.optimization") (setf s (ILDS-opt (inicial (first r) (first (second r)) most-positive-fixnum) #'operator #'h-comp-height)))
 		  (T (print "STRATEGY NOT FOUND") ))
 	
 	;(if (null s) nil (rect-pecas-f s))
@@ -521,14 +527,15 @@ test1 '((#S(PIECE :WIDTH 3 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL)
 ))
 
 
-;(time (place-pieces p1c "alternative.approach.optimization"))
-;(time (place-pieces p20c "alternative.approach.optimization"))
-;(time (place-pieces p4c "alternative.approach.optimization"))
-;(time (place-pieces p40a "alternative.approach.optimization"))
-;(time (place-pieces p50a "alternative.approach.optimization"))
-
-(time (place-pieces p35 "iterative.sampling.optimization"))
+(time (place-pieces p1c "alternative.approach.optimization"))
+(time (place-pieces p20c "alternative.approach.optimization"))
+(time (place-pieces p4c "alternative.approach.optimization"))
 (time (place-pieces p35 "alternative.approach.optimization"))
+(time (place-pieces p40a "alternative.approach.optimization"))
+(time (place-pieces p50a "alternative.approach.optimization"))
+
+;(time (place-pieces p35 "iterative.sampling.optimization"))
+
 
 ;(time (place-pieces p35 "a*.best.heuristic"))
 ;(time (place-pieces p35 "a*.best.alternative.heuristic"))
