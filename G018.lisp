@@ -2,10 +2,6 @@
 
 (in-package :user)
 
-(compile-file "procura.lisp")
-(load "procura")
-(load "PP-examples.lisp") ;--> capaz de dar warning visto que a estrutura piece esta redifinida	
-
 ;;;;;;;;;;;;;;;;;;;PROVIDED;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defstruct piece
@@ -203,17 +199,7 @@
 		(dolist (p (rect-pecas-f r))
 			(setf comp (+ comp (piece-width p) (piece-height p))))
 	(- (* (rect-width r) (rect-height r)) comp)))
-(defun h-pos (r)
-	(let ((p 0))
-		(dolist (pos (rect-posicoes r))
-			(setf p (1+ p)))
-		(- (* (rect-width r) (rect-height r)) p)))
-	
-(defun h-pos2 (r)
-	(let ((p 0))
-		(dolist (pos (rect-posicoes r))
-			(setf p (+ p (first pos) (second pos))))
-		(- (* (rect-width r) (rect-height r)) p)))
+
 
 (defun piece-playable (r p)
 	(let ( (posicoes (rect-posicoes r)) )
@@ -468,87 +454,25 @@
 	)
 )
 
-(setf 
 
-test1 '((#S(PIECE :WIDTH 3 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL) 
-	  #S(PIECE :WIDTH 2 :HEIGHT 3 :POSITION NIL :ORIENTATION NIL) 
-	  #S(PIECE :WIDTH 1 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL) 
-	  #S(PIECE :WIDTH 1 :HEIGHT 3 :POSITION NIL :ORIENTATION NIL))
-       (10 4))
-)
-;;; (load "G018.lisp")
-;(time (setf s (procura (cria-problema (inicial (first p1a) (first (second p1a)) (second(second p1a)) ) (list #'operator) :objectivo? #'objectivo :estado= #'equal) "profundidade" :espaco-em-arvore? T)))
-;(time (setf s (procura (cria-problema (inicial (first test1) (first (second test1)) (second(second test1)) ) (list #'operator) :objectivo? #'objectivo :estado= #'equal) "profundidade" :espaco-em-arvore? T)))
-;(printState (car (last (first s))) )
-
-;(setf ini (inicial (first p4b) (first (second p4b)) (second(second p4b)) ))
-;(printState (ILDS ini #'operator #'complicated))
-
-
-;(setf ini (inicial (first p4b) (first (second p4b)) most-positive-fixnum ))
-;(time (printState (i-sampling-opt ini #'operator)))
-
-
-
-(setf ini (inicial (first p10b) (first (second p10b)) most-positive-fixnum ))
-
-;(time (printState (ILDS-opt ini #'operator #'h-height)))
-
-;;; (time (procura (cria-problema (inicial (first p4b) (first (second p4b)) (second(second p4b))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'complicated) "a*" :espaco-em-arvore? T))
-;;; (time (procura (cria-problema (inicial (first p1b) (first (second p1b)) (second(second p1b))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-comp2) "a*" :espaco-em-arvore? T))
 
 
 (defun place-pieces (r p)
 	(let ((s))
-	(cond ((equal p "best.approach.satisfaction") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-comp ) "a*" :espaco-em-arvore? T))))))
-		  
-		  ((equal p "a*.best.heuristic") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-comp) "a*" :espaco-em-arvore? T))))))
-		  ((equal p "a*.best.alternative.heuristic") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-area) "a*" :espaco-em-arvore? T))))))
+	(cond ((equal p "best.approach.satisfaction") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-area ) "a*" :espaco-em-arvore? T))))))
+		  ((equal p "a*.best.heuristic") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-area) "a*" :espaco-em-arvore? T))))))
+		  ((equal p "a*.best.alternative.heuristic") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-comp) "a*" :espaco-em-arvore? T))))))
 		  ((equal p "ILDS") (setf s (ILDS (inicial (first r) (first (second r)) (second(second r)) T) #'operator #'h-comp)))
 		  ((equal p "iterative.sampling.satisfaction") (setf s (i-sampling-sat (inicial (first r) (first (second r)) (second(second r)) T) #'operator)))
 		  ((equal p "profundidade") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal) "profundidade" :espaco-em-arvore? T))))))
-		  
-		  ((equal p "profundidade.iterativa") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal) "profundidade-iterativa" :espaco-em-arvore? T))))))
-		  ((equal p "ida*.best.heuristic") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'complicated2) "ida*" :espaco-em-arvore? T))))))
-		  ((equal p "ida*.best.alternative.heuristic") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-comp) "ida*" :espaco-em-arvore? T))))))
-		  ((equal p "largura") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal) "largura" :espaco-em-arvore? T))))))
-		  
-		  
 		  ((equal p "best.approach.optimization") (setf s (ILDS-opt (inicial (first r) (first (second r)) most-positive-fixnum) #'operator #'h-hole-height)))
 		  ((equal p "iterative.sampling.optimization") (setf s (i-sampling-opt (inicial (first r) (first (second r)) most-positive-fixnum) #'operator)))
-		  ((equal p "alternative.approach.optimization") (setf s (ILDS-opt (inicial (first r) (first (second r)) most-positive-fixnum) #'operator #'h-comp-height)))
+		  ((equal p "alternative.approach.optimization") (setf s (ILDS-opt (inicial (first r) (first (second r)) most-positive-fixnum) #'operator #'h-hole-height)))
 		  (T (print "STRATEGY NOT FOUND") ))
-	
-	;(if (null s) nil (rect-pecas-f s))
-	;(print s)
-	(if s
-		(print (h-height s)))
+		(if (null s) nil (rect-pecas-f s))
 
 ))
 
 
-(time (place-pieces p1c "alternative.approach.optimization"))
-(time (place-pieces p20c "alternative.approach.optimization"))
-(time (place-pieces p4c "alternative.approach.optimization"))
-(time (place-pieces p35 "alternative.approach.optimization"))
-(time (place-pieces p40a "alternative.approach.optimization"))
-(time (place-pieces p50a "alternative.approach.optimization"))
-
-;(time (place-pieces p35 "iterative.sampling.optimization"))
-
-
-;(time (place-pieces p35 "a*.best.heuristic"))
-;(time (place-pieces p35 "a*.best.alternative.heuristic"))
-;(time (place-pieces p35 "iterative.sampling.satisfaction"))
-;(time (place-pieces p40a "ILDS"))
-;(time (place-pieces p35 "profundidade"))
-
-
-;(time (place-pieces p4c "a*.best.alternative.heuristic"))
-
-;(time (place-pieces p10a "a*.best.heuristic"))
-;(time (place-pieces p100a "best.approach.optimization"))
-;(time (place-pieces p100a "iterative.sampling.optimization"))
-;(time (place-pieces p10c "a*.best.heuristic"))
 
 
