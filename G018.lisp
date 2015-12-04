@@ -266,6 +266,11 @@
 						(setf a (1+ a)))))
 		(+ (h-area r) (* 1.3 a))))
 
+(defun best-heuristic(r)
+	(if (all-pieces-playable r)
+		(h-comp r)
+		most-positive-fixnum)
+)
 
 ; Height heuristic, for optimization problem
 (defun h-height(state)
@@ -367,6 +372,9 @@
 		)
 
 		(when best
+			(if (< (h-height best) (h-height state) )
+				(return-from LDS-opt best))
+
 			(setf (rect-height state) (h-height best))
 			(when (null (all-pieces-playable state))
 				(setf (rect-height state) most-positive-fixnum)
@@ -463,8 +471,8 @@ test1 '((#S(PIECE :WIDTH 3 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL)
 ;(time (printState (i-sampling-opt ini #'operator)))
 
 
-(setf ini (inicial (first p10b) (first (second p10b)) most-positive-fixnum ))
-(time (printState (ILDS-opt ini #'operator #'h-height)))
+;(setf ini (inicial (first p10b) (first (second p10b)) most-positive-fixnum ))
+;(time (printState (ILDS-opt ini #'operator #'h-height)))
 
 ;;; (time (procura (cria-problema (inicial (first p4b) (first (second p4b)) (second(second p4b))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'complicated) "a*" :espaco-em-arvore? T))
 ;;; (time (procura (cria-problema (inicial (first p1b) (first (second p1b)) (second(second p1b))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-comp2) "a*" :espaco-em-arvore? T))
@@ -473,13 +481,14 @@ test1 '((#S(PIECE :WIDTH 3 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL)
 (defun place-pieces (r p)
 	(let ((s))
 	(cond ((equal p "best.approach.satisfaction") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'complicated2) "a*" :espaco-em-arvore? T))))))
-		  ((equal p "a*.best.heuristic") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'complicated2) "a*" :espaco-em-arvore? T))))))
+		  ((equal p "a*.best.heuristic") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'best-heuristic) "a*" :espaco-em-arvore? T))))))
 		  ((equal p "a*.best.alternative.heuristic") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-comp) "a*" :espaco-em-arvore? T))))))
 		  ((equal p "iterative.sampling.satisfaction") (setf s (i-sampling-sat (inicial (first r) (first (second r)) (second(second r)) T) #'operators)))
 		  ((equal p "ILDS") (setf s (ILDS (inicial (first r) (first (second r)) (second(second r)) T) #'operator #'complicated2)))
 		  ((equal p "best.approach.optimization") (setf s (ILDS-opt (inicial (first r) (first (second r)) most-positive-fixnum) #'operator #'h-height)))
 		  ((equal p "iterative.sampling.optimization") (setf s (i-sampling-opt (inicial (first r) (first (second r)) most-positive-fixnum) #'operator)))
 		  ((equal p "alternative.approach.optimization") (setf s (ILDS-opt (inicial (first r) (first (second r)) most-positive-fixnum) #'operator #'h-height))))
+	(print s)
 	(when s (print (h-height s)) (printState s))
 	(if (null s) nil (rect-pecas-f s))))
 
@@ -488,6 +497,9 @@ test1 '((#S(PIECE :WIDTH 3 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL)
 
 
 
-(time (place-pieces p10a "a*.best.heuristic"))
+;(time (place-pieces p10a "a*.best.heuristic"))
+;(time (place-pieces p40a "alternative.approach.optimization"))
+(time (place-pieces p40a "best.approach.satisfaction"))
+;(time (place-pieces p10c "a*.best.heuristic"))
 
 
