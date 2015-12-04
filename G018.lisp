@@ -348,8 +348,8 @@
 				(return-from ILDS-opt best)
 			)
 		)
+		best
 	)
-	best
 )
 
 ; State, lambda operator, heuristic, remaining discrepancies, best solution found, start time
