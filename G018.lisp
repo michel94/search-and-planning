@@ -14,6 +14,10 @@
  position
  orientation) 
 
+(defun get-elapsed(start)
+	(- (get-universal-time) start)
+)
+
 (defun piece-h (p)
 	(if (equal (piece-orientation p) 'V)
 		(piece-height p)
@@ -187,7 +191,7 @@
 		(print m)
 		
 	)
-		
+	
 )
 
 ;h-area: h = Area - areas encaixadas
@@ -220,6 +224,27 @@
 		(dolist (pos (rect-posicoes r))
 			(setf p (+ p (first pos) (second pos))))
 		(- (* (rect-width r) (rect-height r)) p)))
+
+(defun piece-playable (r p)
+	(let ( (posicoes (rect-posicoes r)) )
+		(dolist (pos posicoes)
+			(dolist (o '(H V))
+				(if (encaixa-peca-? r p pos o)
+					(return-from piece-playable T))
+			)
+		)
+		NIL
+	)
+)
+
+(defun all-pieces-playable (r)
+	(let ( (pecas-i (rect-pecas-i r)) )
+		(dolist (p pecas-i)
+			(if (null (piece-playable r p) ) (return-from all-pieces-playable NIL))
+		)
+	)
+	T
+)
 
 (defun complicated(r)
 	(let ((a 0))
@@ -279,10 +304,9 @@
 		(if (objectivo state)
 			(return-from LDS state)
 		)
-		(if (null succ) 
+		(if (null succ)
 			(return-from LDS NIL)
 		)
-
 		
 		(sort succ (lambda (a b) (comp-state h a b) ) )
 
@@ -300,6 +324,74 @@
 			)
 		)
 
+	)
+)
+
+(defun nbest(current new)
+	(when (null current) 
+		(print (h-height new))
+		(printState new)
+		(return-from nbest new) )
+	(if (null new) (return-from nbest new) )
+
+	(if (< (h-height new) (h-height current) )
+		(progn (print (h-height new)) (printState new) new)
+		current
+	)
+)
+
+(defun ILDS-opt (state op h)
+	(let ( (size (length (rect-pecas-i state) ) ) (start (get-universal-time)) best )
+		(loop for disc in (range (1+ size) ) do
+			(setf best (LDS-opt state op h disc best start))
+			(if (> (get-elapsed start) 300)
+				(return-from ILDS-opt best)
+			)
+		)
+	)
+	best
+)
+
+; State, lambda operator, heuristic, remaining discrepancies, best solution found, start time
+(defun LDS-opt (state op h rem-disc best start)
+	(let ((succ (funcall op state)) 
+		  (rem (length (rect-pecas-i state))) )
+
+		(when (objectivo state)
+			(setf best (nbest best state) )
+			(return-from LDS-opt best)
+		)
+
+		(if (null succ)
+			(return-from LDS-opt best)
+		)
+
+		(when best
+			(setf (rect-height state) (h-height best))
+			(when (null (all-pieces-playable state))
+				(setf (rect-height state) most-positive-fixnum)
+				(return-from LDS-opt best)
+			)
+			(setf (rect-height state) most-positive-fixnum)
+		)
+		
+		(sort succ (lambda (a b) (comp-state h a b) ) )
+
+		(when (> rem rem-disc)
+			(setf best (LDS-opt (first succ) op h rem-disc best start) )
+		)
+
+		(if (> rem-disc 0)
+			(loop for child in (cdr succ) do
+				(if (> (get-elapsed start) 300)
+					(return-from LDS-opt best)
+				)
+				
+				(setf best (LDS-opt child op h (1- rem-disc) best start))
+
+			)
+		)
+		best
 	)
 )
 
@@ -329,10 +421,6 @@
 	)
 )
 
-(defun get-elapsed(start)
-	(- (get-universal-time) start)
-)
-
 (defun i-sampling-opt(state op)
 	(let (sol best start)
 		(setf start (get-universal-time))
@@ -347,7 +435,9 @@
 			(print (h-height best) )
 			(printState best)
 			
+
 		while (< (get-elapsed start) 300) )
+
 		best
 	)
 )
@@ -373,8 +463,8 @@ test1 '((#S(PIECE :WIDTH 3 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL)
 ;(time (printState (i-sampling-opt ini #'operator)))
 
 
-
-
+(setf ini (inicial (first p10b) (first (second p10b)) most-positive-fixnum ))
+(time (printState (ILDS-opt ini #'operator #'h-height)))
 
 ;;; (time (procura (cria-problema (inicial (first p4b) (first (second p4b)) (second(second p4b))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'complicated) "a*" :espaco-em-arvore? T))
 ;;; (time (procura (cria-problema (inicial (first p1b) (first (second p1b)) (second(second p1b))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-comp2) "a*" :espaco-em-arvore? T))
@@ -387,9 +477,10 @@ test1 '((#S(PIECE :WIDTH 3 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL)
 		  ((equal p "a*.best.alternative.heuristic") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-comp) "a*" :espaco-em-arvore? T))))))
 		  ((equal p "iterative.sampling.satisfaction") (setf s (i-sampling-sat (inicial (first r) (first (second r)) (second(second r)) T) #'operators)))
 		  ((equal p "ILDS") (setf s (ILDS (inicial (first r) (first (second r)) (second(second r)) T) #'operator #'complicated2)))
-		  ((equal p "best.approach.optimization") T)
+		  ((equal p "best.approach.optimization") (setf s (ILDS-opt (inicial (first r) (first (second r)) most-positive-fixnum) #'operator #'h-height)))
 		  ((equal p "iterative.sampling.optimization") (setf s (i-sampling-opt (inicial (first r) (first (second r)) most-positive-fixnum) #'operator)))
-		  ((equal p "alternative.approach.optimization") T))
+		  ((equal p "alternative.approach.optimization") (setf s (ILDS-opt (inicial (first r) (first (second r)) most-positive-fixnum) #'operator #'h-height))))
+	(when s (print (h-height s)) (printState s))
 	(if (null s) nil (rect-pecas-f s))))
 
 
@@ -397,5 +488,6 @@ test1 '((#S(PIECE :WIDTH 3 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL)
 
 
 
+(time (place-pieces p10a "a*.best.heuristic"))
 
 
