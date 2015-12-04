@@ -191,7 +191,7 @@
 		(print m)
 		
 	)
-		
+	
 )
 
 ;h-area: h = Area - areas encaixadas
@@ -341,7 +341,7 @@
 	(let ( (size (length (rect-pecas-i state) ) ) (start (get-universal-time)) best )
 		(loop for disc in (range (1+ size) ) do
 			(setf best (LDS-opt state op h disc best start))
-			(if (> (get-elapsed start) 20)
+			(if (> (get-elapsed start) 300)
 				(return-from ILDS-opt best)
 			)
 		)
@@ -380,7 +380,7 @@
 
 		(if (> rem-disc 0)
 			(loop for child in (cdr succ) do
-				(if (> (get-elapsed start) 20)
+				(if (> (get-elapsed start) 300)
 					(return-from LDS-opt best)
 				)
 				
@@ -432,7 +432,7 @@
 			(print (h-height best) )
 			(printState best)
 			
-		while (< (get-elapsed start) 15) )
+		while (< (get-elapsed start) 30) )
 		best
 	)
 )
@@ -457,7 +457,7 @@ test1 '((#S(PIECE :WIDTH 3 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL)
 ;(setf ini (inicial (first p4b) (first (second p4b)) most-positive-fixnum ))
 ;(time (printState (i-sampling-opt ini #'operator)))
 
-(setf ini (inicial (first p4b) (first (second p4b)) most-positive-fixnum ))
+(setf ini (inicial (first p4a) (first (second p4a)) most-positive-fixnum ))
 (time (printState (ILDS-opt ini #'operator #'h-height)))
 
 ;;; (time (procura (cria-problema (inicial (first p4b) (first (second p4b)) (second(second p4b))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'complicated) "a*" :espaco-em-arvore? T))
