@@ -62,11 +62,17 @@
 (defstruct rect pecas-i posicoes pecas-f width height)
 
 ;estado inicial
-(defun inicial (pecas w h)
+(defun inicial (pecas w h &optional (verificapecas nil))
 	(let ((area 0) (pos (list (make-pos 0 0))) )
+	
+	(cond ((not (null verificapecas))
 		(dolist (p pecas)
-			(setf area (+ area (* (piece-width p) (piece-height p)))))
-		(if (> area (* w h)) (setf pos nil))
+			(setf area (+ area (* (piece-width p) (piece-height p))))
+			(if (or (> (max (piece-width p)(piece-height p)) (max w h))
+				(> (min (piece-width p)(piece-height p)) (min w h)))
+					(setf pos nil)))
+		(if (> area (* w h)) (setf pos nil))))
+		
 
 	(make-rect :pecas-i pecas
 			:pecas-f (list)
@@ -261,7 +267,7 @@
 			(if sol
 				(return-from ILDS sol))
 		)
-	)(time (procura (cria-problema (inicial (first p1b) (first (second p1b)) (second(second p1b))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-comp2) "a*" :espaco-em-arvore? T))
+	)
 	NIL
 )
 
@@ -357,8 +363,8 @@ test1 '((#S(PIECE :WIDTH 3 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL)
 ;(setf ini (inicial (first p4b) (first (second p4b)) (second(second p4b)) ))
 ;(printState (ILDS ini #'operator #'complicated))
 
-(setf ini (inicial (first p4b) (first (second p4b)) most-positive-fixnum ))
-(printState (i-sampling-opt ini #'operator))
+;(setf ini (inicial (first p4b) (first (second p4b)) most-positive-fixnum ))
+;(printState (i-sampling-opt ini #'operator))
 
 
 
@@ -369,14 +375,16 @@ test1 '((#S(PIECE :WIDTH 3 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL)
 
 
 (defun place-pieces (r p)
-	(cond ((equal p "best.approach.satisfaction") T)
-		  ((equal p "a*.best.heuristic") (rect-pecas-f (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'complicated2) "a*" :espaco-em-arvore? T))))))
-		  ((equal p "a*.best.alternative.heuristic") (rect-pecas-f (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-comp) "a*" :espaco-em-arvore? T))))))
-		  ((equal p "iterative.sampling.satisfaction") (rect-pecas-f (iterative-sampling (inicial (first r) (first (second r)) (second(second r))))))
-		  ((equal p "ILDS") (rect-pecas-f (ILDS (inicial (first r) (first (second r)) (second(second r))) #'h-area)))
+	(let ((s))
+	(cond ((equal p "best.approach.satisfaction") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'complicated2) "a*" :espaco-em-arvore? T))))))
+		  ((equal p "a*.best.heuristic") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'complicated2) "a*" :espaco-em-arvore? T))))))
+		  ((equal p "a*.best.alternative.heuristic") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-comp) "a*" :espaco-em-arvore? T))))))
+		  ((equal p "iterative.sampling.satisfaction") (setf s (iterative-sampling (inicial (first r) (first (second r)) (second(second r)) T))))
+		  ((equal p "ILDS") (setf s (ILDS (inicial (first r) (first (second r)) (second(second r)) T) #'operator #'complicated2)))
 		  ((equal p "best.approach.optimization") T)
 		  ((equal p "iterative.sampling.optimization") T)
-		  ((equal p "alternative.approach.optimization") T)))
+		  ((equal p "alternative.approach.optimization") T))
+	(if (null s) nil (rect-pecas-f s))))
 
 
 
