@@ -261,7 +261,7 @@
 			(if sol
 				(return-from ILDS sol))
 		)
-	)(time (procura (cria-problema (inicial (first p1b) (first (second p1b)) (second(second p1b))) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-comp2) "a*" :espaco-em-arvore? T))
+	)
 	NIL
 )
 
@@ -323,8 +323,13 @@
 	)
 )
 
+(defun get-elapsed(start)
+	(- (get-universal-time) start)
+)
+
 (defun i-sampling-opt(state op)
-	(let (sol best)
+	(let (sol best start)
+		(setf start (get-universal-time))
 		(loop do
 			(setf sol (samp state op))
 			(if (null best)
@@ -336,13 +341,13 @@
 			(print (h-height best) )
 			(printState best)
 			
-		while T)
+		while (< (get-elapsed start) 15) )
+		best
 	)
 )
 
 (setf 
 
- ;; Satisfaction: does not have a solution.
 test1 '((#S(PIECE :WIDTH 3 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL) 
 	  #S(PIECE :WIDTH 2 :HEIGHT 3 :POSITION NIL :ORIENTATION NIL) 
 	  #S(PIECE :WIDTH 1 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL) 
@@ -358,7 +363,7 @@ test1 '((#S(PIECE :WIDTH 3 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL)
 ;(printState (ILDS ini #'operator #'complicated))
 
 (setf ini (inicial (first p4b) (first (second p4b)) most-positive-fixnum ))
-(printState (i-sampling-opt ini #'operator))
+(time (printState (i-sampling-opt ini #'operator)))
 
 
 
