@@ -292,12 +292,12 @@
 			)
 		)
 
-		(- 0 count)
+		count
 	)
 )
 
-(defun h-hole-comp(state)
-	(h-comp state)
+(defun h-hole-height(state)
+	(/ (h-comp state) (* 50 (h-height state) ))
 )
 
 
@@ -351,13 +351,11 @@
 
 (defun nbest(current new)
 	(when (null current) 
-		(print (h-height new))
-		(printState new)
 		(return-from nbest new) )
 	(if (null new) (return-from nbest new) )
 
 	(if (< (h-height new) (h-height current) )
-		(progn (print (h-height new)) (printState new) new)
+		new
 		current
 	)
 )
@@ -510,23 +508,30 @@ test1 '((#S(PIECE :WIDTH 3 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL)
 		  ((equal p "largura") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal) "largura" :espaco-em-arvore? T))))))
 		  
 		  
-		  ((equal p "best.approach.optimization") (setf s (ILDS-opt (inicial (first r) (first (second r)) most-positive-fixnum) #'operator #'complicated3)))
+		  ((equal p "best.approach.optimization") (setf s (ILDS-opt (inicial (first r) (first (second r)) most-positive-fixnum) #'operator #'h-hole-height)))
 		  ((equal p "iterative.sampling.optimization") (setf s (i-sampling-opt (inicial (first r) (first (second r)) most-positive-fixnum) #'operator)))
-		  ((equal p "alternative.approach.optimization") (setf s (ILDS-opt (inicial (first r) (first (second r)) most-positive-fixnum) #'operator #'h-height)))
+		  ((equal p "alternative.approach.optimization") (setf s (ILDS-opt (inicial (first r) (first (second r)) most-positive-fixnum) #'operator #'h-hole-height)))
 		  (T (print "NO STRATEGY FOUND") ))
 	
 	;(if (null s) nil (rect-pecas-f s))
-	(print s)
+	;(print s)
 	(if s
 		(print (h-height s)))
-
+	
 ))
 
-(time (place-pieces p1c "iterative.sampling.optimization"))
-(time (place-pieces p20c "iterative.sampling.optimization"))
-(time (place-pieces p4c "iterative.sampling.optimization"))
-(time (place-pieces p40a "iterative.sampling.optimization"))
-(time (place-pieces p50a "iterative.sampling.optimization"))
+
+(time (place-pieces p1c "alternative.approach.optimization"))
+(time (place-pieces p20c "alternative.approach.optimization"))
+(time (place-pieces p4c "alternative.approach.optimization"))
+(time (place-pieces p40a "alternative.approach.optimization"))
+(time (place-pieces p50a "alternative.approach.optimization"))
+
+;(time (place-pieces p35 "a*.best.heuristic"))
+;(time (place-pieces p35 "a*.best.alternative.heuristic"))
+;(time (place-pieces p35 "iterative.sampling.satisfaction"))
+;(time (place-pieces p40a "ILDS"))
+;(time (place-pieces p35 "profundidade"))
 
 
 ;(time (place-pieces p4c "a*.best.alternative.heuristic"))
