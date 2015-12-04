@@ -156,18 +156,6 @@
 					(cond ((encaixa-peca-? r p pos o) (push (encaixa r p pos o) rs))))))
 		(values rs)))
 
-
-(defun operatorOpt (r)
-	(let (rs
-			(pecas-i (rect-pecas-i r))
-			(posicoes (rect-posicoes r)))
-		(dolist (p pecas-i rs)
-			(dolist (pos posicoes)
-				(dolist (o '(H V))
-					(cond ((encaixa-peca-? r p pos o) (push (encaixa r p pos o) rs))))))
-		(values rs)))
-
-
 (defun create-matrix(s)
 	(let ((m 
 			(make-array (list (rect-width s) (if (> (rect-height s) 1000) 50 (rect-height s)) ) :initial-element 0)
@@ -257,20 +245,6 @@
 						(return-from complicated most-positive-fixnum)
 						(setf a (1+ a)))))
 		a))
-
-(defun complicated2(r)
-	(let ((a 0))
-		(dolist (pos (rect-posicoes r))
-			(dolist (p (rect-pecas-i r))
-				(if (or (<(- (rect-width r) (pos-h pos)) (min (piece-width p)(piece-height p)))
-						(<(- (rect-height r) (pos-v pos)) (min (piece-width p)(piece-height p))))
-						(return-from complicated2 most-positive-fixnum)
-						(setf a (1+ a)))))
-		(+ (h-comp r) a)))
-
-
-(defun complicated3(r)
-	(+ (h-comp r) (* 0.1 (complicated r))))
 
 (defun best-heuristic(r)
 	(if (all-pieces-playable r)
@@ -483,11 +457,8 @@
 					(setf best sol)
 				)
 			)
-			(print (h-height best) )
-			(printState best)
-			
 
-		while (< (get-elapsed start) 30) )
+		while (< (get-elapsed start) 300) )
 
 		best
 	)
@@ -529,8 +500,8 @@ test1 '((#S(PIECE :WIDTH 3 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL)
 		  
 		  ((equal p "a*.best.heuristic") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-comp) "a*" :espaco-em-arvore? T))))))
 		  ((equal p "a*.best.alternative.heuristic") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal :heuristica #'h-area) "a*" :espaco-em-arvore? T))))))
-		  ((equal p "ILDS") (setf s (ILDS (inicial (first r) (first (second r)) (second(second r)) T) #'operator #'h-area)))
-		  ((equal p "iterative.sampling.satisfaction") (setf s (i-sampling-sat (inicial (first r) (first (second r)) (second(second r)) T) #'operators)))
+		  ((equal p "ILDS") (setf s (ILDS (inicial (first r) (first (second r)) (second(second r)) T) #'operator #'h-comp)))
+		  ((equal p "iterative.sampling.satisfaction") (setf s (i-sampling-sat (inicial (first r) (first (second r)) (second(second r)) T) #'operator)))
 		  ((equal p "profundidade") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal) "profundidade" :espaco-em-arvore? T))))))
 		  
 		  ((equal p "profundidade.iterativa") (setf s (first (last (first (procura (cria-problema (inicial (first r) (first(second r)) (second(second r)) T) (list #'operator) :objectivo? #'objectivo :estado= #'equal) "profundidade-iterativa" :espaco-em-arvore? T))))))
@@ -541,20 +512,21 @@ test1 '((#S(PIECE :WIDTH 3 :HEIGHT 6 :POSITION NIL :ORIENTATION NIL)
 		  
 		  ((equal p "best.approach.optimization") (setf s (ILDS-opt (inicial (first r) (first (second r)) most-positive-fixnum) #'operator #'complicated3)))
 		  ((equal p "iterative.sampling.optimization") (setf s (i-sampling-opt (inicial (first r) (first (second r)) most-positive-fixnum) #'operator)))
-		  ((equal p "alternative.approach.optimization") (setf s (ILDS-opt (inicial (first r) (first (second r)) most-positive-fixnum) #'operator #'h-height))))
-	(print s) 
-
-	(when s (print (h-height s)) (printState s))
-	(if (null s) nil (rect-pecas-f s))
-	(print (h-hole s) )
+		  ((equal p "alternative.approach.optimization") (setf s (ILDS-opt (inicial (first r) (first (second r)) most-positive-fixnum) #'operator #'h-height)))
+		  (T (print "NO STRATEGY FOUND") ))
+	
+	;(if (null s) nil (rect-pecas-f s))
+	(print s)
+	(if s
+		(print (h-height s)))
 
 ))
 
-(time (place-pieces p1c "profundidade"))
-(time (place-pieces p20c "profundidade"))
-(time (place-pieces p4c "profundidade"))
-(time (place-pieces p40a "profundidade"))
-(time (place-pieces p50a "profundidade"))
+(time (place-pieces p1c "iterative.sampling.optimization"))
+(time (place-pieces p20c "iterative.sampling.optimization"))
+(time (place-pieces p4c "iterative.sampling.optimization"))
+(time (place-pieces p40a "iterative.sampling.optimization"))
+(time (place-pieces p50a "iterative.sampling.optimization"))
 
 
 ;(time (place-pieces p4c "a*.best.alternative.heuristic"))
